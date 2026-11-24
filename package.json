@@ -1,0 +1,39 @@
+{
+  "name": "uteqgram",
+  "version": "2.0.0",
+  "description": "UTEQGram — Proyecto Parcial 2: login, roles, SQLite, CI/CD y OpenObserve",
+  "type": "module",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --import ./server/instrumentation.js server/index.js",
+    "start:plain": "node server/index.js",
+    "test": "playwright test",
+    "test:e2e": "playwright test"
+  },
+  "author": "Pablo Abraham Guerrero Alvarado",
+  "license": "ISC",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api-logs": "^0.57.2",
+    "@opentelemetry/auto-instrumentations-node": "^0.57.1",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.57.2",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.57.2",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.57.2",
+    "@opentelemetry/resources": "^1.30.1",
+    "@opentelemetry/sdk-logs": "^0.57.2",
+    "@opentelemetry/sdk-metrics": "^1.30.1",
+    "@opentelemetry/sdk-node": "^0.57.2",
+    "@opentelemetry/semantic-conventions": "^1.28.0",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1"
+  }
+}

@@ -1,0 +1,70 @@
+services:
+  uteqgram:
+    build: .
+    container_name: uteqgram
+    restart: unless-stopped
+    ports:
+      - "80:3000"
+    environment:
+      PORT: "3000"
+      JWT_SECRET: ${JWT_SECRET:-uteqgram-ec2-secret}
+      SQLITE_PATH: /data/app.db
+      UPLOADS_DIR: /data/uploads
+      NODE_ENV: production
+      OTEL_SERVICE_NAME: uteqgram
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    volumes:
+      - uteqgram-data:/data
+    depends_on:
+      - otel-collector
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      retries: 8
+
+  openobserve:
+    image: public.ecr.aws/zinclabs/openobserve:latest
+    container_name: openobserve
+    restart: unless-stopped
+    ports:
+      - "5080:5080"
+    environment:
+      ZO_ROOT_USER_EMAIL: admin@uteqgram.local
+      ZO_ROOT_USER_PASSWORD: OpenObserve123!
+      ZO_DATA_DIR: /data
+    volumes:
+      - openobserve-data:/data
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    container_name: otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      - openobserve
+      - node-exporter
+    ports:
+      - "4318:4318"
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node-exporter
+    restart: unless-stopped
+    pid: host
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/host/root"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+
+volumes:
+  uteqgram-data:
+  openobserve-data:

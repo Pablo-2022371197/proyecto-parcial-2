@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feed — UTEQGram</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="/src/css/material.indigo-pink.min.css">
+  <link rel="stylesheet" href="/src/css/app.css">
+  <link rel="stylesheet" href="/src/css/feed.css">
+  <link rel="icon" href="/src/images/icons/app-icon-192x192.png">
+  <meta name="theme-color" content="#3f51b5">
+</head>
+<body>
+<div id="app">
+  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+    <header class="mdl-layout__header">
+      <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title">UTEQGram</span>
+        <div class="mdl-layout-spacer"></div>
+        <nav class="mdl-navigation mdl-layout--large-screen-only">
+          <a class="mdl-navigation__link" href="/">Feed</a>
+          <a class="mdl-navigation__link hidden" data-admin-only href="/admin/users">Usuarios</a>
+        </nav>
+        <span class="nav-user" id="nav-username"></span>
+        <button id="logout-btn" type="button" class="mdl-button mdl-js-button mdl-button--raised">Salir</button>
+      </div>
+    </header>
+    <div class="mdl-layout__drawer">
+      <span class="mdl-layout-title">UTEQGram</span>
+      <nav class="mdl-navigation">
+        <a class="mdl-navigation__link" href="/">Feed</a>
+        <a class="mdl-navigation__link hidden" data-admin-only href="/admin/users">Usuarios</a>
+      </nav>
+    </div>
+    <main class="mdl-layout__content mat-typography">
+      <div id="create-post">
+        <form id="create-post-form">
+          <div class="input-section mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="title" name="title">
+            <label class="mdl-textfield__label" for="title">Título</label>
+          </div>
+          <div class="input-section mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="location" name="location">
+            <label class="mdl-textfield__label" for="location">Ubicación</label>
+          </div>
+          <br>
+          <div>
+            <input type="file" id="image" name="image" accept="image/*">
+          </div>
+          <br>
+          <div>
+            <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-color--accent"
+                    type="submit" id="post-btn">Postear!</button>
+          </div>
+          <br>
+          <div>
+            <button class="mdl-button mdl-js-button mdl-button--fab" id="close-create-post-modal-btn" type="button">
+              <i class="material-icons">close</i>
+            </button>
+          </div>
+        </form>
+      </div>
+      <img src="/src/images/main-image.png" alt="Campus UTEQ" class="main-image">
+      <div class="page-content">
+        <h5 class="text-center mdl-color-text--primary">Comparte tus Momentos</h5>
+        <div id="shared-moments"></div>
+      </div>
+      <div class="floating-button">
+        <button class="mdl-button mdl-js-button mdl-button--fab mdl-button--colored" id="share-image-button" type="button">
+          <i class="material-icons">add</i>
+        </button>
+      </div>
+      <div id="confirmation-toast" aria-live="assertive" aria-atomic="true" class="mdl-snackbar mdl-js-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button type="button" class="mdl-snackbar__action"></button>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="/src/js/material.min.js"></script>
+<script src="/src/js/api.js"></script>
+<script src="/src/js/nav.js"></script>
+<script src="/src/js/feed.js"></script>
+</body>
+</html>

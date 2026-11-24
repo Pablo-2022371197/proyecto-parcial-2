@@ -1,0 +1,104 @@
+.text-center {
+    text-align: center;
+}
+
+.drawer-option {
+    padding: 16px;
+}
+
+.install-app {
+    display: none;
+    margin-left: 8px;
+}
+
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-size: 14px;
+    padding: 0 12px;
+}
+
+.login-wrap {
+    max-width: 420px;
+    margin: 64px auto;
+    padding: 24px;
+}
+
+.login-wrap .mdl-card {
+    width: 100%;
+    min-height: auto;
+}
+
+.login-wrap .mdl-card__supporting-text {
+    width: auto;
+}
+
+.login-error {
+    color: #b00020;
+    min-height: 1.2em;
+    margin: 8px 16px 0;
+}
+
+.admin-wrap {
+    max-width: 960px;
+    margin: 24px auto;
+    padding: 0 16px 48px;
+}
+
+.admin-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    align-items: end;
+    margin: 16px 0 24px;
+}
+
+.admin-form .mdl-textfield {
+    width: 100%;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.users-table th,
+.users-table td {
+    border: 1px solid #ddd;
+    padding: 10px 12px;
+    text-align: left;
+}
+
+.users-table th {
+    background: #3f51b5;
+    color: #fff;
+}
+
+.users-table button {
+    margin-right: 6px;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.role-badge.admin {
+    background: #ff4081;
+    color: #fff;
+}
+
+.role-badge.user {
+    background: #e8eaf6;
+    color: #3f51b5;
+}
+
+.hidden {
+    display: none !important;
+}

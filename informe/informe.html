@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Proyecto Parcial 2: UTEQGram CI/CD — Pablo Abraham Guerrero Alvarado</title>
+  <style>
+    @page { size: letter; margin: 2.5cm; }
+    @page :first { margin: 1.8cm 2.2cm; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt; line-height: 1.55; color: #111;
+    }
+    p { text-align: justify; text-indent: 1.25cm; margin: 0 0 0.55em; }
+    p.noindent { text-indent: 0; }
+    h1, h2 { page-break-after: avoid; }
+    h1 { font-size: 16pt; margin: 1.1em 0 0.55em; }
+    h2 { font-size: 13.5pt; margin: 0.95em 0 0.4em; }
+    table { width: 100%; border-collapse: collapse; margin: 0.8em 0 1em; font-size: 10.5pt; }
+    th, td { border: 1px solid #333; padding: 0.28em 0.45em; text-align: left; vertical-align: top; }
+    th { background: #f3f3f3; }
+    caption { caption-side: top; font-size: 10.5pt; margin-bottom: 0.35em; text-align: center; font-style: italic; }
+    figure { margin: 1em 0 1.15em; page-break-inside: avoid; text-align: center; }
+    figure img { max-width: 100%; height: auto; border: 1px solid #ddd; }
+    figcaption { font-size: 10.5pt; margin-top: 0.4em; text-align: center; font-style: italic; }
+    code { font-family: Consolas, "Courier New", monospace; font-size: 10.5pt; }
+    a { color: #153a7a; }
+    ul, ol { margin: 0.4em 0 0.8em; }
+    ol.refs { padding-left: 1.4cm; }
+    ol.refs li { text-align: justify; margin-bottom: 0.45em; }
+    .cover {
+      page-break-after: always; min-height: 23.5cm;
+      display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 1.4cm;
+    }
+    .cover img.logo { width: 13.2cm; height: auto; margin: 0.3cm 0 1.15cm; }
+    .cover .uni { font-size: 14pt; margin: 0 0 1.15cm; }
+    .cover h1.title { font-size: 26pt; font-weight: 700; margin: 0 0 1.35cm; line-height: 1.2; }
+    .cover .meta { font-size: 13.5pt; line-height: 1.35; margin: 0 0 0.85cm; }
+    .cover .meta .label { display: block; margin-bottom: 0.12cm; }
+    .toc { page-break-after: always; }
+    .toc h1 { text-indent: 0; }
+    .toc ol { font-size: 12pt; line-height: 1.8; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <img class="logo" src="logo-uteq.png" alt="Logotipo Universidad Tecnológica de Querétaro" />
+    <p class="uni noindent">Universidad Tecnológica de Querétaro</p>
+    <h1 class="title">Proyecto Parcial 2: UTEQGram CI/CD</h1>
+    <div class="meta"><span class="label">Materia:</span>Gestión del Proceso de Desarrollo de Software</div>
+    <div class="meta"><span class="label">Grupo:</span>IDGS14</div>
+    <div class="meta"><span class="label">Alumno:</span>Pablo Abraham Guerrero Alvarado</div>
+    <div class="meta"><span class="label">Docente:</span>M.C.C. Emmanuel Martínez Hernández</div>
+    <div class="meta"><span class="label">Fecha de entrega:</span>22 de noviembre de 2026</div>
+  </section>
+  <section class="toc">
+    <h1>Índice</h1>
+    <ol>
+      <li>Introducción</li>
+      <li>Objetivo</li>
+      <li>Requerimientos cubiertos</li>
+      <li>Arquitectura</li>
+      <li>Credenciales de entrega</li>
+      <li>Enlaces de repositorio y servidor</li>
+      <li>Pruebas automatizadas</li>
+      <li>Observabilidad</li>
+      <li>Evidencias</li>
+      <li>Conclusiones</li>
+      <li>Referencias</li>
+    </ol>
+  </section>
+
+  <h1>1. Introducción</h1>
+  <p>Este proyecto cubre la especificación del Proyecto Parcial 2: una aplicación con frontend y backend, pruebas de extremo a extremo con Playwright, un pipeline de GitHub Actions que solo despliega en AWS EC2 cuando las pruebas aprueban, e instrumentación OpenTelemetry hacia OpenObserve (registros, métricas, trazas y recursos del servidor).</p>
+  <p>La base visual es UTEQGram, la PWA de la materia de aplicaciones web progresivas. Esa versión era estática, usaba Supabase para el feed y no tenía login. En esta entrega se recortaron Firebase, el Service Worker y las claves de Supabase. Se añadió un API en Node.js con SQLite, autenticación JWT en cookie httpOnly y dos roles: <code>user</code> (feed de posts) y <code>admin</code> (CRUD de usuarios).</p>
+
+  <h1>2. Objetivo</h1>
+  <p>Implementar un flujo de integración y despliegue continuo hacia EC2, condicionado a Playwright, con observabilidad centralizada en OpenObserve. La aplicación debe exponer login, posts y administración de usuarios sobre SQLite, de modo que las trazas cubran petición HTTP y consulta a base de datos.</p>
+
+  <h1>3. Requerimientos cubiertos</h1>
+  <table>
+    <caption>Tabla 1. Correspondencia con la especificación</caption>
+    <thead>
+      <tr><th>Id</th><th>Implementación</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>RF-01</td><td>Playwright (Chromium) sobre UI y API: login, feed, CRUD, 401/403 y <code>/api/health</code>.</td></tr>
+      <tr><td>RF-02</td><td>Workflow <code>.github/workflows/ci-cd.yml</code>: el job <code>deploy</code> usa <code>needs: test</code> y no corre si Playwright falla.</td></tr>
+      <tr><td>RF-03</td><td>Job <code>notify</code> (<code>if: always()</code>) envía a OpenObserve <code>status</code>, <code>sha</code>, <code>ref</code>, <code>actor</code> y <code>run_id</code>; el deploy registra un evento aparte.</td></tr>
+      <tr><td>RF-04</td><td>SDK OpenTelemetry Node: logs JSON, histograma de latencia, contadores por <code>statusCode</code> y spans SQLite.</td></tr>
+      <tr><td>RF-05</td><td><code>node-exporter</code> + métricas <code>host.*</code> (CPU, RAM, red, temperatura si el kernel la expone).</td></tr>
+      <tr><td>RF-06</td><td>OpenObserve en el mismo Compose (puerto 5080) para logs, traces, metrics y streams <code>cicd</code>/<code>deploy</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h1>4. Arquitectura</h1>
+  <p>El Compose local y de EC2 levanta cuatro servicios: <code>uteqgram</code> (Express + SQLite + archivos de imagen), <code>otel-collector</code> (OTLP y scrape de Prometheus), <code>node-exporter</code> y <code>openobserve</code>. La aplicación exporta OTLP a <code>http://otel-collector:4318</code>; el collector reenvía a <code>http://openobserve:5080/api/default</code> con autenticación Basic.</p>
+  <p>Los datos viven en un volumen Docker (<code>/data/app.db</code> y <code>/data/uploads</code>). El frontend Material se sirve desde <code>public/</code>. Las rutas HTML aplican la misma política que el API: sin sesión se redirige a <code>/login</code>; un <code>user</code> que pide <code>/admin/users</code> vuelve al feed.</p>
+
+  <h1>5. Credenciales de entrega</h1>
+  <p>La rúbrica pide incluir las credenciales del sistema y de OpenObserve. Son las de demostración sembradas al arranque; no se deben reutilizar fuera de la práctica.</p>
+  <table>
+    <caption>Tabla 2. Cuentas de la aplicación y de observabilidad</caption>
+    <thead>
+      <tr><th>Sistema</th><th>Usuario</th><th>Contraseña</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>UTEQGram (admin)</td><td><code>admin</code></td><td><code>Admin123!</code></td></tr>
+      <tr><td>UTEQGram (user)</td><td><code>user</code></td><td><code>User123!</code></td></tr>
+      <tr><td>OpenObserve</td><td><code>admin@uteqgram.local</code></td><td><code>OpenObserve123!</code></td></tr>
+    </tbody>
+  </table>
+  <p>El rol <code>user</code> entra al feed. El rol <code>admin</code> entra a <code>/admin/users</code>. Las contraseñas se almacenan con bcrypt; el API nunca devuelve <code>password_hash</code>.</p>
+
+  <h1>6. Enlaces de repositorio y servidor</h1>
+  <p>El código fuente de esta entrega está en la carpeta <code>proyecto-parcial-2/</code> del workspace de DevOps. El workflow de GitHub Actions ya está en <code>.github/workflows/ci-cd.yml</code>. El alta del remoto público y de la instancia EC2 se documenta en <code>deploy/ec2-setup.md</code> (Docker, security group 22/80/5080 y secretos <code>EC2_HOST</code>, <code>EC2_USER</code>, <code>EC2_SSH_KEY</code>, <code>OO_URL</code>, <code>OO_USER</code>, <code>OO_PASSWORD</code>).</p>
+  <p>Cuando existan, los enlaces de revisión en clase son:</p>
+  <ul>
+    <li>Repositorio GitHub: el remoto que se asocie a <code>proyecto-parcial-2/</code>.</li>
+    <li>Aplicación: <code>http://&lt;EC2_PUBLIC_IP&gt;/login</code></li>
+    <li>OpenObserve: <code>http://&lt;EC2_PUBLIC_IP&gt;:5080</code></li>
+  </ul>
+
+  <h1>7. Pruebas automatizadas</h1>
+  <p>La suite se ejecuta con <code>npx playwright test</code>. Un servidor efímero (<code>tests/start-e2e.js</code>) borra <code>data/e2e.db</code>, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI.</p>
+  <p>En esta máquina el resultado fue <strong>18 passed</strong> (login UI, feed, CRUD, API 401/403, health/host y capturas). El reporte HTML del framework queda en <code>playwright-report/</code>.</p>
+  <p>El criterio de aceptación del commit con error intencional se demuestra así: alterar un texto visible o el <code>status</code> esperado de <code>/api/health</code>, hacer push a <code>main</code>, observar Playwright en rojo, el evento <code>ci_test/failure</code> en OpenObserve y la ausencia del job SSH. Al revertir, el deploy actualiza contenedores y se registra <code>event=deploy</code>.</p>
+
+  <h1>8. Observabilidad</h1>
+  <p>Cada petición HTTP escribe un log JSON con <code>timestamp</code>, <code>level</code>, <code>msg</code>, <code>route</code>, <code>statusCode</code>, <code>durationMs</code> y <code>traceId</code>. Las métricas <code>http.server.duration</code> y <code>http.server.requests</code> etiquetan método, ruta y código. Los accesos SQLite abren un span <code>sqlite.query*</code> con <code>db.statement</code>.</p>
+  <p><code>/api/host</code> expone CPU, RAM, bytes de red y temperatura. En Windows y en muchas instancias EC2 virtualizadas <code>thermalAvailable</code> vale 0 porque no existe <code>/sys/class/thermal</code>; no se inventa un sensor. En Linux bare-metal o si el kernel publica <code>thermal_zone*</code>, la métrica <code>host.thermal.celsius</code> toma ese valor. El ancho de banda sale de <code>/proc/net/dev</code> y de <code>node-exporter</code> (<code>node_network_*_bytes_total</code>).</p>
+
+  <h1>9. Evidencias</h1>
+  <p class="noindent">Las capturas se tomaron con Playwright contra <code>http://127.0.0.1:3000</code>.</p>
+  <figure>
+    <img src="evidencias/01_login.png" alt="Página de inicio de sesión de UTEQGram" />
+    <figcaption>Figura 1. Página de inicio de sesión de UTEQGram.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/02_feed_user.png" alt="Feed de posts con la sesión del rol user" />
+    <figcaption>Figura 2. Feed de posts con la sesión del rol user.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/03_admin_users.png" alt="CRUD de usuarios" />
+    <figcaption>Figura 3. CRUD de usuarios: el admin no puede eliminarse a sí mismo.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/04_feed_admin.png" alt="Feed visto por el administrador" />
+    <figcaption>Figura 4. Feed visto por el administrador, con enlace a Usuarios.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/05_health_host.png" alt="JSON de health y host" />
+    <figcaption>Figura 5. Respuesta de /api/health y /api/host (CPU, RAM, bandera térmica).</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/06_playwright_report.png" alt="Reporte HTML de Playwright" />
+    <figcaption>Figura 6. Reporte HTML de Playwright: 18 pruebas en verde.</figcaption>
+  </figure>
+
+  <h1>10. Conclusiones</h1>
+  <p>UTEQGram dejó de ser una PWA acoplada a Supabase y pasó a un backend propio con SQLite, roles reales (no solo botones ocultos) y un pipeline que bloquea el SSH a EC2 si Playwright falla. OpenTelemetry y OpenObserve cubren los tres pilares de observabilidad más el registro del CI. La temperatura del hypervisor de EC2 es una limitación conocida y queda instrumentada como disponibilidad, no como un valor ficticio.</p>
+  <p>La operación restante del alumno es crear el repositorio GitHub, la instancia EC2 y cargar los secretos listados en <code>deploy/ec2-setup.md</code>, para completar los enlaces públicos de la rúbrica.</p>
+
+  <h1>11. Referencias</h1>
+  <ol class="refs">
+    <li>Especificación de Requerimientos del Proyecto Parcial 2: Arquitectura de Entrega Continua (CI/CD), Pruebas Automatizadas y Observabilidad.</li>
+    <li>OpenTelemetry for Node.js. OpenObserve. <a href="https://openobserve.ai/opentelemetry/nodejs/">https://openobserve.ai/opentelemetry/nodejs/</a></li>
+    <li>OpenTelemetry JavaScript exporters. <a href="https://opentelemetry.io/docs/languages/js/exporters/">https://opentelemetry.io/docs/languages/js/exporters/</a></li>
+    <li>Playwright Test. <a href="https://playwright.dev/docs/intro">https://playwright.dev/docs/intro</a></li>
+  </ol>
+</body>
+</html>

@@ -1,0 +1,188 @@
+\documentclass[12pt,letterpaper]{article}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{array}
+
+\geometry{letterpaper,margin=2.5cm}
+\onehalfspacing
+\setlength{\parindent}{1.25cm}
+\setlength{\parskip}{0.25em}
+\pagestyle{plain}
+\captionsetup{font=small,labelfont=bf,justification=centering}
+\hypersetup{colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+\vspace*{1.6cm}
+\includegraphics[width=0.72\textwidth]{logo-uteq.png}\\[1.4cm]
+{\large Universidad Tecnol\'ogica de Quer\'etaro}\\[1.3cm]
+{\Huge\bfseries Proyecto Parcial 2: UTEQGram CI/CD}\\[1.6cm]
+{\large Materia:}\\[0.2cm]
+{\large Gesti\'on del Proceso de Desarrollo de Software}\\[0.7cm]
+{\large Grupo:}\\[0.2cm]
+{\large IDGS14}\\[0.7cm]
+{\large Alumno:}\\[0.2cm]
+{\large Pablo Abraham Guerrero Alvarado}\\[0.7cm]
+{\large Docente:}\\[0.2cm]
+{\large M.C.C. Emmanuel Mart\'inez Hern\'andez}\\[0.7cm]
+{\large Fecha de entrega:}\\[0.2cm]
+{\large 22 de noviembre de 2026}
+\vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introducci\'on}
+
+Este proyecto cubre la especificaci\'on del Proyecto Parcial 2: una aplicaci\'on con frontend y backend, pruebas de extremo a extremo con Playwright, un pipeline de GitHub Actions que solo despliega en AWS EC2 cuando las pruebas aprueban, e instrumentaci\'on OpenTelemetry hacia OpenObserve (registros, m\'etricas, trazas y recursos del servidor).
+
+La base visual es UTEQGram, la PWA de la materia de aplicaciones web progresivas. Esa versi\'on era est\'atica, usaba Supabase para el feed y no ten\'ia login. En esta entrega se recortaron Firebase, el Service Worker y las claves de Supabase. Se a\~nadi\'o un API en Node.js con SQLite, autenticaci\'on JWT en cookie httpOnly y dos roles: \texttt{user} (feed de posts) y \texttt{admin} (CRUD de usuarios).
+
+\section{Objetivo}
+
+Implementar un flujo de integraci\'on y despliegue continuo hacia EC2, condicionado a Playwright, con observabilidad centralizada en OpenObserve. La aplicaci\'on debe exponer login, posts y administraci\'on de usuarios sobre SQLite, de modo que las trazas cubran petici\'on HTTP y consulta a base de datos.
+
+\section{Requerimientos cubiertos}
+
+\begin{table}[h]
+\centering
+\caption{Correspondencia con la especificaci\'on}
+\begin{tabular}{|p{2.4cm}|p{11cm}|}
+\hline
+\textbf{Id} & \textbf{Implementaci\'on} \\
+\hline
+RF-01 & Playwright (Chromium) sobre UI y API: login, feed, CRUD, 401/403 y \texttt{/api/health}. \\
+\hline
+RF-02 & Workflow \texttt{.github/workflows/ci-cd.yml}: el job \texttt{deploy} usa \texttt{needs: test} y no corre si Playwright falla. \\
+\hline
+RF-03 & Job \texttt{notify} (\texttt{if: always()}) env\'ia a OpenObserve \texttt{status}, \texttt{sha}, \texttt{ref}, \texttt{actor} y \texttt{run\_id}; el deploy registra un evento aparte. \\
+\hline
+RF-04 & SDK OpenTelemetry Node: logs JSON, histograma de latencia, contadores por \texttt{statusCode} y spans SQLite. \\
+\hline
+RF-05 & \texttt{node-exporter} + m\'etricas \texttt{host.*} (CPU, RAM, red, temperatura si el kernel la expone). \\
+\hline
+RF-06 & OpenObserve en el mismo Compose (puerto 5080) para logs, traces, metrics y streams \texttt{cicd}/\texttt{deploy}. \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Arquitectura}
+
+El Compose local y de EC2 levanta cuatro servicios: \texttt{uteqgram} (Express + SQLite + archivos de imagen), \texttt{otel-collector} (OTLP y scrape de Prometheus), \texttt{node-exporter} y \texttt{openobserve}. La aplicaci\'on exporta OTLP a \texttt{http://otel-collector:4318}; el collector reenv\'ia a \texttt{http://openobserve:5080/api/default} con autenticaci\'on Basic.
+
+Los datos viven en un volumen Docker (\texttt{/data/app.db} y \texttt{/data/uploads}). El frontend Material se sirve desde \texttt{public/}. Las rutas HTML aplican la misma pol\'itica que el API: sin sesi\'on se redirige a \texttt{/login}; un \texttt{user} que pide \texttt{/admin/users} vuelve al feed.
+
+\section{Credenciales de entrega}
+
+La r\'ubrica pide incluir las credenciales del sistema y de OpenObserve. Son las de demostraci\'on sembradas al arranque; no se deben reutilizar fuera de la pr\'actica.
+
+\begin{table}[h]
+\centering
+\caption{Cuentas de la aplicaci\'on y de observabilidad}
+\begin{tabular}{|p{3.2cm}|p{4.6cm}|p{5.4cm}|}
+\hline
+\textbf{Sistema} & \textbf{Usuario} & \textbf{Contrase\~na} \\
+\hline
+UTEQGram (admin) & \texttt{admin} & \texttt{Admin123!} \\
+\hline
+UTEQGram (user) & \texttt{user} & \texttt{User123!} \\
+\hline
+OpenObserve & \texttt{admin@uteqgram.local} & \texttt{OpenObserve123!} \\
+\hline
+\end{tabular}
+\end{table}
+
+El rol \texttt{user} entra al feed. El rol \texttt{admin} entra a \texttt{/admin/users}. Las contrase\~nas se almacenan con bcrypt; el API nunca devuelve \texttt{password\_hash}.
+
+\section{Enlaces de repositorio y servidor}
+
+El c\'odigo fuente de esta entrega est\'a en la carpeta \texttt{proyecto-parcial-2/} del workspace de DevOps. El workflow de GitHub Actions ya est\'a en \texttt{.github/workflows/ci-cd.yml}. El alta del remoto p\'ublico y de la instancia EC2 se documenta en \texttt{deploy/ec2-setup.md} (Docker, security group 22/80/5080 y secretos \texttt{EC2\_HOST}, \texttt{EC2\_USER}, \texttt{EC2\_SSH\_KEY}, \texttt{OO\_URL}, \texttt{OO\_USER}, \texttt{OO\_PASSWORD}).
+
+Cuando existan, los enlaces de revisi\'on en clase son:
+
+\begin{itemize}
+\item Repositorio GitHub: el remoto que se asocie a \texttt{proyecto-parcial-2/}.
+\item Aplicaci\'on: \texttt{http://<EC2\_PUBLIC\_IP>/login}
+\item OpenObserve: \texttt{http://<EC2\_PUBLIC\_IP>:5080}
+\end{itemize}
+
+\section{Pruebas automatizadas}
+
+La suite se ejecuta con \texttt{npx playwright test}. Un servidor ef\'imero (\texttt{tests/start-e2e.js}) borra \texttt{data/e2e.db}, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI.
+
+En esta m\'aquina el resultado fue \textbf{18 passed} (login UI, feed, CRUD, API 401/403, health/host y capturas). El reporte HTML del framework queda en \texttt{playwright-report/}.
+
+El criterio de aceptaci\'on del commit con error intencional se demuestra as\'i: alterar un texto visible o el \texttt{status} esperado de \texttt{/api/health}, hacer push a \texttt{main}, observar Playwright en rojo, el evento \texttt{ci\_test/failure} en OpenObserve y la ausencia del job SSH. Al revertir, el deploy actualiza contenedores y se registra \texttt{event=deploy}.
+
+\section{Observabilidad}
+
+Cada petici\'on HTTP escribe un log JSON con \texttt{timestamp}, \texttt{level}, \texttt{msg}, \texttt{route}, \texttt{statusCode}, \texttt{durationMs} y \texttt{traceId}. Las m\'etricas \texttt{http.server.duration} y \texttt{http.server.requests} etiquetan m\'etodo, ruta y c\'odigo. Los accesos SQLite abren un span \texttt{sqlite.query*} con \texttt{db.statement}.
+
+\texttt{/api/host} expone CPU, RAM, bytes de red y temperatura. En Windows y en muchas instancias EC2 virtualizadas \texttt{thermalAvailable} vale 0 porque no existe \texttt{/sys/class/thermal}; no se inventa un sensor. En Linux bare-metal o si el kernel publica \texttt{thermal\_zone*}, la m\'etrica \texttt{host.thermal.celsius} toma ese valor. El ancho de banda sale de \texttt{/proc/net/dev} y de \texttt{node-exporter} (\texttt{node\_network\_*\_bytes\_total}).
+
+\section{Evidencias}
+
+Las capturas se tomaron con Playwright contra \texttt{http://127.0.0.1:3000}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/01\_login.png}
+\caption{P\'agina de inicio de sesi\'on de UTEQGram.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/02\_feed\_user.png}
+\caption{Feed de posts con la sesi\'on del rol \texttt{user}.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/03\_admin\_users.png}
+\caption{CRUD de usuarios: el admin no puede eliminarse a s\'i mismo.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/04\_feed\_admin.png}
+\caption{Feed visto por el administrador, con enlace a Usuarios.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/05\_health\_host.png}
+\caption{Respuesta de \texttt{/api/health} y \texttt{/api/host} (CPU, RAM, bandera t\'ermica).}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/06\_playwright\_report.png}
+\caption{Reporte HTML de Playwright: 18 pruebas en verde.}
+\end{figure}
+
+\section{Conclusiones}
+
+UTEQGram dej\'o de ser una PWA acoplada a Supabase y pas\'o a un backend propio con SQLite, roles reales (no solo botones ocultos) y un pipeline que bloquea el SSH a EC2 si Playwright falla. OpenTelemetry y OpenObserve cubren los tres pilares de observabilidad m\'as el registro del CI. La temperatura del hypervisor de EC2 es una limitaci\'on conocida y queda instrumentada como disponibilidad, no como un valor ficticio.
+
+La operaci\'on restante del alumno es crear el repositorio GitHub, la instancia EC2 y cargar los secretos listados en \texttt{deploy/ec2-setup.md}, para completar los enlaces p\'ublicos de la r\'ubrica.
+
+\section{Referencias}
+
+\begin{enumerate}
+\item Especificaci\'on de Requerimientos del Proyecto Parcial 2: Arquitectura de Entrega Continua (CI/CD), Pruebas Automatizadas y Observabilidad.
+\item OpenTelemetry for Node.js. OpenObserve. \url{https://openobserve.ai/opentelemetry/nodejs/}
+\item OpenTelemetry JavaScript exporters. \url{https://opentelemetry.io/docs/languages/js/exporters/}
+\item Playwright Test. \url{https://playwright.dev/docs/intro}
+\end{enumerate}
+
+\end{document}

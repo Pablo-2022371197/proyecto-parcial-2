@@ -1,0 +1,74 @@
+#create-post {
+    z-index: 1001;
+    position: fixed;
+    width: 100%;
+    min-height: 100vh;
+    overflow-y: scroll;
+    top: 56px;
+    bottom: 0;
+    background: seashell;
+    text-align: center;
+    /* display: none; */
+    transform: translateY(100vh);
+    transition: transform 0.3s ease-in-out;
+}
+
+.main-image {
+    max-width: 100%;
+    margin: auto;
+    display: block;
+}
+
+.floating-button {
+    z-index: 1000;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    font-size: 24px;
+    text-align: center;
+    line-height: 56px;
+}
+
+.shared-moment-card.mdl-card {
+    margin: 10px auto;
+    width: 80%;
+}
+
+.shared-moment-card--pending {
+    opacity: 0.92;
+    outline: 2px dashed #ff9800;
+}
+
+@media (min-width: 600px) {
+    .shared-moment-card.mdl-card {
+        width: 60%;
+    }
+}
+
+@media (min-width: 960px) {
+    .shared-moment-card.mdl-card {
+        width: 45%;
+    }
+}
+
+.shared-moment-card .mdl-card__title {
+    height: 140px;
+}
+
+@media (min-height: 700px) {
+    .shared-moment-card .mdl-card__title {
+        height: 180px;
+    }
+}
+
+@media (min-height: 1000px) {
+    .shared-moment-card .mdl-card__title {
+        height: 220px;
+    }
+}
+

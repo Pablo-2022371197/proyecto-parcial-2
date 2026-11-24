@@ -1,0 +1,41 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: node
+          scrape_interval: 15s
+          static_configs:
+            - targets: ["node-exporter:9100"]
+
+processors:
+  batch:
+    timeout: 5s
+
+exporters:
+  otlphttp/openobserve:
+    endpoint: http://openobserve:5080/api/default
+    headers:
+      Authorization: "Basic YWRtaW5AdXRlcWdyYW0ubG9jYWw6T3Blbk9ic2VydmUxMjMh"
+  debug:
+    verbosity: basic
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/openobserve]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch]
+      exporters: [otlphttp/openobserve]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/openobserve]
