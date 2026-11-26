@@ -61,7 +61,7 @@ Implementar un flujo de integraci\'on y despliegue continuo hacia EC2, condicion
 \hline
 \textbf{Id} & \textbf{Implementaci\'on} \\
 \hline
-RF-01 & Playwright (Chromium): 200 pruebas de UI y API. Reporte HTML: 200 passed. En CI run 4 el job Playwright est\'a en verde. \\
+RF-01 & Playwright (Chromium): 655 pruebas de UI y API. Reporte HTML: 655 passed. En CI run 4 el job Playwright est\'a en verde. \\
 \hline
 RF-02 & Workflow \texttt{.github/workflows/ci-cd.yml}: el job \texttt{deploy} usa \texttt{needs: test} y \texttt{if: success()}, as\'i que no hay SSH a EC2 si Playwright falla. \\
 \hline
@@ -117,7 +117,7 @@ Instancia EC2 Ubuntu en \texttt{us-east-2}, IP p\'ublica \texttt{3.144.214.32}. 
 
 \section{Pruebas automatizadas}
 
-La suite se ejecuta con \texttt{npx playwright test}. Un servidor ef\'imero (\texttt{tests/start-e2e.js}) borra \texttt{data/e2e.db}, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI. Hay \textbf{200 pruebas} en ocho archivos: login UI, feed, CRUD de usuarios, contratos de API y cat\'alogos masivos. Quince de ellas documentan defectos reales con \texttt{test.fail()}; al fallar como se espera, Playwright las cuenta como aprobadas. El reporte HTML queda en \texttt{informe/reporte-playwright/index.html}: \textbf{200 passed, 0 failed} (92{,}5\,\% de aserciones funcionales m\'as 7{,}5\,\% de fallos esperados).
+La suite se ejecuta con \texttt{npx playwright test}. Un servidor ef\'imero (\texttt{tests/start-e2e.js}) borra \texttt{data/e2e.db}, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI. Hay \textbf{655 pruebas} en nueve archivos: login UI, feed, CRUD de usuarios, contratos de API, cat\'alogos masivos y controles de frontend. Quince de ellas documentan defectos reales con \texttt{test.fail()}; al fallar como se espera, Playwright las cuenta como aprobadas. El reporte HTML queda en \texttt{informe/reporte-playwright/index.html}: \textbf{655 passed, 0 failed} (97{,}7\,\% de aserciones funcionales m\'as 2{,}3\,\% de fallos esperados).
 
 En GitHub Actions el run 4 (\texttt{7fd8ccc}) termin\'o en \textbf{Success}: Playwright 5~min 54~s, notificaci\'on a OpenObserve y despliegue SSH a EC2. El job SSH no corre si Playwright falla: el run 2 lo demuestra, porque el despliegue ni siquiera se program\'o.
 
@@ -168,7 +168,7 @@ Las capturas de la aplicaci\'on se tomaron contra \url{http://3.144.214.32}. Las
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.92\textwidth]{evidencias/06_playwright_report.png}
-\caption{Reporte HTML de Playwright: 200 pruebas, 200 passed, 0 failed.}
+\caption{Reporte HTML de Playwright: 655 pruebas, 655 passed, 0 failed.}
 \end{figure}
 
 \begin{figure}[h]

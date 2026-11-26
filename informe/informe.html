@@ -85,7 +85,7 @@
       <tr><th>Id</th><th>Implementación</th></tr>
     </thead>
     <tbody>
-      <tr><td>RF-01</td><td>Playwright (Chromium): 200 pruebas de UI y API. Reporte HTML: 200 passed. En CI run 4 el job Playwright está en verde.</td></tr>
+      <tr><td>RF-01</td><td>Playwright (Chromium): 655 pruebas de UI y API. Reporte HTML: 655 passed. En CI run 4 el job Playwright está en verde.</td></tr>
       <tr><td>RF-02</td><td>Workflow <code>.github/workflows/ci-cd.yml</code>: el job <code>deploy</code> usa <code>needs: test</code> y <code>if: success()</code>, así que no hay SSH a EC2 si Playwright falla.</td></tr>
       <tr><td>RF-03</td><td>Job <code>notify</code> (<code>if: always()</code>) envía a OpenObserve <code>status</code>, <code>sha</code>, <code>ref</code>, <code>actor</code> y <code>run_id</code> en el stream <code>cicd</code>; el deploy registra <code>event=deploy</code>.</td></tr>
       <tr><td>RF-04</td><td>SDK OpenTelemetry Node: logs JSON, histograma de latencia, contadores por <code>statusCode</code> y spans SQLite (<code>sqlite.queryGet</code>).</td></tr>
@@ -123,7 +123,7 @@
   <p>Instancia EC2 Ubuntu en <code>us-east-2</code>, IP pública <code>3.144.214.32</code>. Puertos del security group: 22 (SSH), 80 (app) y 5080 (OpenObserve). Secretos del repositorio: <code>EC2_HOST</code>, <code>EC2_USER</code>, <code>EC2_SSH_KEY</code>, <code>OO_URL</code>, <code>OO_USER</code>, <code>OO_PASSWORD</code>.</p>
 
   <h1>7. Pruebas automatizadas</h1>
-  <p>La suite se ejecuta con <code>npx playwright test</code>. Un servidor efímero (<code>tests/start-e2e.js</code>) borra <code>data/e2e.db</code>, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI. Hay <strong>200 pruebas</strong> en ocho archivos: login UI, feed, CRUD de usuarios, contratos de API y catálogos masivos. Quince de ellas documentan defectos reales con <code>test.fail()</code>; al fallar como se espera, Playwright las cuenta como aprobadas. El reporte HTML queda en <code>informe/reporte-playwright/index.html</code>: <strong>200 passed, 0 failed</strong> (92,5 % de aserciones funcionales más 7,5 % de fallos esperados).</p>
+  <p>La suite se ejecuta con <code>npx playwright test</code>. Un servidor efímero (<code>tests/start-e2e.js</code>) borra <code>data/e2e.db</code>, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI. Hay <strong>655 pruebas</strong> en nueve archivos: login UI, feed, CRUD de usuarios, contratos de API, catálogos masivos y controles de frontend. Quince de ellas documentan defectos reales con <code>test.fail()</code>; al fallar como se espera, Playwright las cuenta como aprobadas. El reporte HTML queda en <code>informe/reporte-playwright/index.html</code>: <strong>655 passed, 0 failed</strong> (97,7 % de aserciones funcionales más 2,3 % de fallos esperados).</p>
   <p>En GitHub Actions el run 4 (<code>7fd8ccc</code>) terminó en <strong>Success</strong>: Playwright 5 min 54 s, notificación a OpenObserve y despliegue SSH a EC2. El job SSH no corre si Playwright falla: el run 2 lo demuestra, porque el despliegue ni siquiera se programó.</p>
   <p>El criterio de aceptación del commit con error intencional se cubre con ese mismo diseño: alterar un texto visible o el <code>status</code> de <code>/api/health</code>, hacer push a <code>main</code>, observar Playwright en rojo, el evento <code>ci_test/failure</code> en OpenObserve y la ausencia del job SSH. Un commit válido deja Playwright en verde, actualiza los contenedores y registra <code>event=deploy</code>.</p>
 
@@ -155,8 +155,8 @@
     <figcaption>Figura 5. Respuesta de /api/health y /api/host (CPU, RAM, red y bandera térmica).</figcaption>
   </figure>
   <figure>
-    <img src="evidencias/06_playwright_report.png" alt="Reporte HTML de Playwright con 200 pruebas en verde" />
-    <figcaption>Figura 6. Reporte HTML de Playwright: 200 pruebas, 200 passed, 0 failed.</figcaption>
+    <img src="evidencias/06_playwright_report.png" alt="Reporte HTML de Playwright con 655 pruebas en verde" />
+    <figcaption>Figura 6. Reporte HTML de Playwright: 655 pruebas, 655 passed, 0 failed.</figcaption>
   </figure>
   <figure>
     <img src="evidencias/13_github_actions.png" alt="GitHub Actions run 4 en Success" />
