@@ -35,7 +35,7 @@
 {\large Docente:}\\[0.2cm]
 {\large M.C.C. Emmanuel Mart\'inez Hern\'andez}\\[0.7cm]
 {\large Fecha de entrega:}\\[0.2cm]
-{\large 22 de noviembre de 2026}
+{\large 26 de noviembre de 2026}
 \vfill
 \end{titlepage}
 
@@ -61,24 +61,24 @@ Implementar un flujo de integraci\'on y despliegue continuo hacia EC2, condicion
 \hline
 \textbf{Id} & \textbf{Implementaci\'on} \\
 \hline
-RF-01 & Playwright (Chromium) sobre UI y API: login, feed, CRUD, 401/403 y \texttt{/api/health}. \\
+RF-01 & Playwright (Chromium): 200 pruebas de UI y API (login, feed, CRUD, 401/403, \texttt{/api/health}). En CI: job Playwright en verde. \\
 \hline
-RF-02 & Workflow \texttt{.github/workflows/ci-cd.yml}: el job \texttt{deploy} usa \texttt{needs: test} y no corre si Playwright falla. \\
+RF-02 & Workflow \texttt{.github/workflows/ci-cd.yml}: el job \texttt{deploy} usa \texttt{needs: test} y \texttt{if: success()}, as\'i que no hay SSH a EC2 si Playwright falla. \\
 \hline
-RF-03 & Job \texttt{notify} (\texttt{if: always()}) env\'ia a OpenObserve \texttt{status}, \texttt{sha}, \texttt{ref}, \texttt{actor} y \texttt{run\_id}; el deploy registra un evento aparte. \\
+RF-03 & Job \texttt{notify} (\texttt{if: always()}) env\'ia a OpenObserve \texttt{status}, \texttt{sha}, \texttt{ref}, \texttt{actor} y \texttt{run\_id} en el stream \texttt{cicd}; el deploy registra \texttt{event=deploy}. \\
 \hline
-RF-04 & SDK OpenTelemetry Node: logs JSON, histograma de latencia, contadores por \texttt{statusCode} y spans SQLite. \\
+RF-04 & SDK OpenTelemetry Node: logs JSON, histograma de latencia, contadores por \texttt{statusCode} y spans SQLite (\texttt{sqlite.queryGet}). \\
 \hline
-RF-05 & \texttt{node-exporter} + m\'etricas \texttt{host.*} (CPU, RAM, red, temperatura si el kernel la expone). \\
+RF-05 & \texttt{node-exporter} + m\'etricas \texttt{host.*}: CPU, RAM, bytes de red y temperatura (kernel y hwmon). \\
 \hline
-RF-06 & OpenObserve en el mismo Compose (puerto 5080) para logs, traces, metrics y streams \texttt{cicd}/\texttt{deploy}. \\
+RF-06 & Tablero \textit{UTEQGram --- Infraestructura y CI/CD} (CPU, RAM, ancho de banda, temperatura) y alertas \texttt{ram\_alta\_ec2}, \texttt{pipeline\_ci\_fallido}, \texttt{errores\_http\_app}. \\
 \hline
 \end{tabular}
 \end{table}
 
 \section{Arquitectura}
 
-El Compose local y de EC2 levanta cuatro servicios: \texttt{uteqgram} (Express + SQLite + archivos de imagen), \texttt{otel-collector} (OTLP y scrape de Prometheus), \texttt{node-exporter} y \texttt{openobserve}. La aplicaci\'on exporta OTLP a \texttt{http://otel-collector:4318}; el collector reenv\'ia a \texttt{http://openobserve:5080/api/default} con autenticaci\'on Basic.
+El Compose de EC2 levanta cuatro servicios: \texttt{uteqgram} (Express + SQLite + archivos de imagen), \texttt{otel-collector} (OTLP y scrape de Prometheus), \texttt{node-exporter} y \texttt{openobserve}. La aplicaci\'on exporta OTLP a \texttt{http://otel-collector:4318}; el collector reenv\'ia a \texttt{http://openobserve:5080/api/default} con autenticaci\'on Basic.
 
 Los datos viven en un volumen Docker (\texttt{/data/app.db} y \texttt{/data/uploads}). El frontend Material se sirve desde \texttt{public/}. Las rutas HTML aplican la misma pol\'itica que el API: sin sesi\'on se redirige a \texttt{/login}; un \texttt{user} que pide \texttt{/admin/users} vuelve al feed.
 
@@ -106,75 +106,118 @@ El rol \texttt{user} entra al feed. El rol \texttt{admin} entra a \texttt{/admin
 
 \section{Enlaces de repositorio y servidor}
 
-El c\'odigo fuente de esta entrega est\'a en la carpeta \texttt{proyecto-parcial-2/} del workspace de DevOps. El workflow de GitHub Actions ya est\'a en \texttt{.github/workflows/ci-cd.yml}. El alta del remoto p\'ublico y de la instancia EC2 se documenta en \texttt{deploy/ec2-setup.md} (Docker, security group 22/80/5080 y secretos \texttt{EC2\_HOST}, \texttt{EC2\_USER}, \texttt{EC2\_SSH\_KEY}, \texttt{OO\_URL}, \texttt{OO\_USER}, \texttt{OO\_PASSWORD}).
-
-Cuando existan, los enlaces de revisi\'on en clase son:
-
 \begin{itemize}
-\item Repositorio GitHub: el remoto que se asocie a \texttt{proyecto-parcial-2/}.
-\item Aplicaci\'on: \texttt{http://<EC2\_PUBLIC\_IP>/login}
-\item OpenObserve: \texttt{http://<EC2\_PUBLIC\_IP>:5080}
+\item Repositorio GitHub: \url{https://github.com/Pablo-2022371197/proyecto-parcial-2}
+\item Aplicaci\'on: \url{http://3.144.214.32/login}
+\item OpenObserve: \url{http://3.144.214.32:5080}
+\item Pipeline CI/CD: \url{https://github.com/Pablo-2022371197/proyecto-parcial-2/actions}
 \end{itemize}
+
+Instancia EC2 Ubuntu en \texttt{us-east-2}, IP p\'ublica \texttt{3.144.214.32}. Puertos del security group: 22 (SSH), 80 (app) y 5080 (OpenObserve). Secretos del repositorio: \texttt{EC2\_HOST}, \texttt{EC2\_USER}, \texttt{EC2\_SSH\_KEY}, \texttt{OO\_URL}, \texttt{OO\_USER}, \texttt{OO\_PASSWORD}.
 
 \section{Pruebas automatizadas}
 
-La suite se ejecuta con \texttt{npx playwright test}. Un servidor ef\'imero (\texttt{tests/start-e2e.js}) borra \texttt{data/e2e.db}, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI.
+La suite se ejecuta con \texttt{npx playwright test}. Un servidor ef\'imero (\texttt{tests/start-e2e.js}) borra \texttt{data/e2e.db}, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI. Hay \textbf{200 pruebas} en ocho archivos: login UI, feed, CRUD de usuarios, contratos de API, cat\'alogos masivos y 15 defectos documentados con \texttt{test.fail()} para no tumbar el deploy.
 
-En esta m\'aquina el resultado fue \textbf{18 passed} (login UI, feed, CRUD, API 401/403, health/host y capturas). El reporte HTML del framework queda en \texttt{playwright-report/}.
+En GitHub Actions el job Playwright del run 3 termin\'o en verde (6~min 47~s). El job \texttt{notify} envi\'o el resultado al stream \texttt{cicd} de OpenObserve. El job SSH no corre si Playwright falla: el run 2 (t\'itulos duplicados / suite incompleta) lo demuestra, porque el despliegue ni siquiera se program\'o.
 
-El criterio de aceptaci\'on del commit con error intencional se demuestra as\'i: alterar un texto visible o el \texttt{status} esperado de \texttt{/api/health}, hacer push a \texttt{main}, observar Playwright en rojo, el evento \texttt{ci\_test/failure} en OpenObserve y la ausencia del job SSH. Al revertir, el deploy actualiza contenedores y se registra \texttt{event=deploy}.
+El criterio de aceptaci\'on del commit con error intencional se cubre con ese mismo dise\~no: alterar un texto visible o el \texttt{status} de \texttt{/api/health}, hacer push a \texttt{main}, observar Playwright en rojo, el evento \texttt{ci\_test/failure} en OpenObserve y la ausencia del job SSH. Un commit v\'alido deja Playwright en verde y, con la clave SSH correcta, actualiza los contenedores y registra \texttt{event=deploy}.
 
 \section{Observabilidad}
 
-Cada petici\'on HTTP escribe un log JSON con \texttt{timestamp}, \texttt{level}, \texttt{msg}, \texttt{route}, \texttt{statusCode}, \texttt{durationMs} y \texttt{traceId}. Las m\'etricas \texttt{http.server.duration} y \texttt{http.server.requests} etiquetan m\'etodo, ruta y c\'odigo. Los accesos SQLite abren un span \texttt{sqlite.query*} con \texttt{db.statement}.
+Cada petici\'on HTTP escribe un log JSON con \texttt{timestamp}, \texttt{level}, \texttt{msg}, \texttt{route}, \texttt{statusCode}, \texttt{durationMs} y \texttt{traceId}. Las m\'etricas \texttt{http.server.duration} y \texttt{http.server.requests} etiquetan m\'etodo, ruta y c\'odigo. Los accesos SQLite abren un span \texttt{sqlite.query*} con \texttt{db.statement}. En OpenObserve hay cientos de trazas del servicio \texttt{uteqgram} y el stream \texttt{cicd} con \texttt{success} y \texttt{failure}.
 
-\texttt{/api/host} expone CPU, RAM, bytes de red y temperatura. En Windows y en muchas instancias EC2 virtualizadas \texttt{thermalAvailable} vale 0 porque no existe \texttt{/sys/class/thermal}; no se inventa un sensor. En Linux bare-metal o si el kernel publica \texttt{thermal\_zone*}, la m\'etrica \texttt{host.thermal.celsius} toma ese valor. El ancho de banda sale de \texttt{/proc/net/dev} y de \texttt{node-exporter} (\texttt{node\_network\_*\_bytes\_total}).
+El tablero \textit{UTEQGram --- Infraestructura y CI/CD} grafica CPU, RAM, bytes RX/TX y temperatura. \texttt{/api/host} expone los mismos valores. En EC2 virtualizada el sensor \texttt{/sys/class/thermal} no publica grados reales (\texttt{thermalAvailable=0}); \texttt{node-exporter} s\'i exporta \texttt{node\_hwmon\_temp\_celsius} (en esta instancia el NVMe reporta $-273{,}15\,^{\circ}$C, es decir, sin lectura f\'isica). No se inventa un valor de temperatura.
+
+Las alertas operativas \texttt{ram\_alta\_ec2}, \texttt{errores\_http\_app} y \texttt{pipeline\_ci\_fallido} viven en Reliability. Esta \'ultima qued\'o en estado \textit{Firing} porque el stream \texttt{cicd} contiene al menos un \texttt{status=failure}.
 
 \section{Evidencias}
 
-Las capturas se tomaron con Playwright contra \texttt{http://127.0.0.1:3000}.
+Las capturas de la aplicaci\'on se tomaron contra \url{http://3.144.214.32}. Las de observabilidad contra \url{http://3.144.214.32:5080}. Las de CI contra el run p\'ublico de GitHub Actions.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.92\textwidth]{evidencias/01\_login.png}
-\caption{P\'agina de inicio de sesi\'on de UTEQGram.}
+\includegraphics[width=0.92\textwidth]{evidencias/01_login.png}
+\caption{P\'agina de inicio de sesi\'on de UTEQGram en EC2.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.92\textwidth]{evidencias/02\_feed\_user.png}
+\includegraphics[width=0.92\textwidth]{evidencias/02_feed_user.png}
 \caption{Feed de posts con la sesi\'on del rol \texttt{user}.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.92\textwidth]{evidencias/03\_admin\_users.png}
+\includegraphics[width=0.92\textwidth]{evidencias/03_admin_users.png}
 \caption{CRUD de usuarios: el admin no puede eliminarse a s\'i mismo.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.92\textwidth]{evidencias/04\_feed\_admin.png}
+\includegraphics[width=0.92\textwidth]{evidencias/04_feed_admin.png}
 \caption{Feed visto por el administrador, con enlace a Usuarios.}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.92\textwidth]{evidencias/05\_health\_host.png}
-\caption{Respuesta de \texttt{/api/health} y \texttt{/api/host} (CPU, RAM, bandera t\'ermica).}
+\includegraphics[width=0.92\textwidth]{evidencias/05_health_host.png}
+\caption{Respuesta de \texttt{/api/health} y \texttt{/api/host} (CPU, RAM, red y bandera t\'ermica).}
 \end{figure}
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.92\textwidth]{evidencias/06\_playwright\_report.png}
-\caption{Reporte HTML de Playwright: 18 pruebas en verde.}
+\includegraphics[width=0.92\textwidth]{evidencias/06_playwright_report.png}
+\caption{GitHub Actions: job Playwright en verde (suite de 200 pruebas).}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/13_github_actions.png}
+\caption{Pipeline condicionado: Playwright y OpenObserve en verde; el SSH a EC2 no avanza si falla la autenticaci\'on de la clave.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/08_openobserve_dashboards.png}
+\caption{Listado de tableros en OpenObserve: UTEQGram --- Infraestructura y CI/CD.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/09_openobserve_dashboard_cpu.png}
+\caption{Gr\'aficas simult\'aneas de CPU, RAM, ancho de banda (RX/TX) y temperatura del host EC2.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/10_openobserve_cicd.png}
+\caption{Stream \texttt{cicd}: registros de ejecuci\'on del pipeline (\'exito en verde, fallo en rojo).}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/11_openobserve_traces.png}
+\caption{Trazas HTTP de UTEQGram, incluyendo spans \texttt{sqlite.queryGet}.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/12_openobserve_alerts.png}
+\caption{Alertas operativas: \texttt{pipeline\_ci\_fallido} en Firing; RAM y errores HTTP en Normal.}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.92\textwidth]{evidencias/07_openobserve_home.png}
+\caption{Inicio de OpenObserve con el evento de alerta del pipeline CI.}
 \end{figure}
 
 \section{Conclusiones}
 
-UTEQGram dej\'o de ser una PWA acoplada a Supabase y pas\'o a un backend propio con SQLite, roles reales (no solo botones ocultos) y un pipeline que bloquea el SSH a EC2 si Playwright falla. OpenTelemetry y OpenObserve cubren los tres pilares de observabilidad m\'as el registro del CI. La temperatura del hypervisor de EC2 es una limitaci\'on conocida y queda instrumentada como disponibilidad, no como un valor ficticio.
+UTEQGram dej\'o de ser una PWA acoplada a Supabase y pas\'o a un backend propio con SQLite, roles reales y un pipeline que bloquea el SSH a EC2 si Playwright falla. OpenTelemetry y OpenObserve cubren logs, m\'etricas, trazas, el registro del CI, un tablero de infraestructura y alertas operativas. La temperatura del hypervisor de EC2 es una limitaci\'on conocida: se grafica la m\'etrica real (incluso cuando el sensor no entrega grados \'utiles) y no se fabrica un valor.
 
-La operaci\'on restante del alumno es crear el repositorio GitHub, la instancia EC2 y cargar los secretos listados en \texttt{deploy/ec2-setup.md}, para completar los enlaces p\'ublicos de la r\'ubrica.
+La aplicaci\'on y OpenObserve ya responden en \texttt{3.144.214.32}. El job de pruebas y el de notificaci\'on a OpenObserve est\'an en verde. El auto-deploy SSH queda condicionado a Playwright y a una clave \texttt{EC2\_SSH\_KEY} v\'alida (contenido completo del \texttt{.pem}).
 
 \section{Referencias}
 

@@ -52,7 +52,7 @@
     <div class="meta"><span class="label">Grupo:</span>IDGS14</div>
     <div class="meta"><span class="label">Alumno:</span>Pablo Abraham Guerrero Alvarado</div>
     <div class="meta"><span class="label">Docente:</span>M.C.C. Emmanuel Martínez Hernández</div>
-    <div class="meta"><span class="label">Fecha de entrega:</span>22 de noviembre de 2026</div>
+    <div class="meta"><span class="label">Fecha de entrega:</span>26 de noviembre de 2026</div>
   </section>
   <section class="toc">
     <h1>Índice</h1>
@@ -85,17 +85,17 @@
       <tr><th>Id</th><th>Implementación</th></tr>
     </thead>
     <tbody>
-      <tr><td>RF-01</td><td>Playwright (Chromium) sobre UI y API: login, feed, CRUD, 401/403 y <code>/api/health</code>.</td></tr>
-      <tr><td>RF-02</td><td>Workflow <code>.github/workflows/ci-cd.yml</code>: el job <code>deploy</code> usa <code>needs: test</code> y no corre si Playwright falla.</td></tr>
-      <tr><td>RF-03</td><td>Job <code>notify</code> (<code>if: always()</code>) envía a OpenObserve <code>status</code>, <code>sha</code>, <code>ref</code>, <code>actor</code> y <code>run_id</code>; el deploy registra un evento aparte.</td></tr>
-      <tr><td>RF-04</td><td>SDK OpenTelemetry Node: logs JSON, histograma de latencia, contadores por <code>statusCode</code> y spans SQLite.</td></tr>
-      <tr><td>RF-05</td><td><code>node-exporter</code> + métricas <code>host.*</code> (CPU, RAM, red, temperatura si el kernel la expone).</td></tr>
-      <tr><td>RF-06</td><td>OpenObserve en el mismo Compose (puerto 5080) para logs, traces, metrics y streams <code>cicd</code>/<code>deploy</code>.</td></tr>
+      <tr><td>RF-01</td><td>Playwright (Chromium): 200 pruebas de UI y API (login, feed, CRUD, 401/403, <code>/api/health</code>). En CI: job Playwright en verde.</td></tr>
+      <tr><td>RF-02</td><td>Workflow <code>.github/workflows/ci-cd.yml</code>: el job <code>deploy</code> usa <code>needs: test</code> y <code>if: success()</code>, así que no hay SSH a EC2 si Playwright falla.</td></tr>
+      <tr><td>RF-03</td><td>Job <code>notify</code> (<code>if: always()</code>) envía a OpenObserve <code>status</code>, <code>sha</code>, <code>ref</code>, <code>actor</code> y <code>run_id</code> en el stream <code>cicd</code>; el deploy registra <code>event=deploy</code>.</td></tr>
+      <tr><td>RF-04</td><td>SDK OpenTelemetry Node: logs JSON, histograma de latencia, contadores por <code>statusCode</code> y spans SQLite (<code>sqlite.queryGet</code>).</td></tr>
+      <tr><td>RF-05</td><td><code>node-exporter</code> + métricas <code>host.*</code>: CPU, RAM, bytes de red y temperatura (kernel y hwmon).</td></tr>
+      <tr><td>RF-06</td><td>Tablero UTEQGram — Infraestructura y CI/CD (CPU, RAM, ancho de banda, temperatura) y alertas <code>ram_alta_ec2</code>, <code>pipeline_ci_fallido</code>, <code>errores_http_app</code>.</td></tr>
     </tbody>
   </table>
 
   <h1>4. Arquitectura</h1>
-  <p>El Compose local y de EC2 levanta cuatro servicios: <code>uteqgram</code> (Express + SQLite + archivos de imagen), <code>otel-collector</code> (OTLP y scrape de Prometheus), <code>node-exporter</code> y <code>openobserve</code>. La aplicación exporta OTLP a <code>http://otel-collector:4318</code>; el collector reenvía a <code>http://openobserve:5080/api/default</code> con autenticación Basic.</p>
+  <p>El Compose de EC2 levanta cuatro servicios: <code>uteqgram</code> (Express + SQLite + archivos de imagen), <code>otel-collector</code> (OTLP y scrape de Prometheus), <code>node-exporter</code> y <code>openobserve</code>. La aplicación exporta OTLP a <code>http://otel-collector:4318</code>; el collector reenvía a <code>http://openobserve:5080/api/default</code> con autenticación Basic.</p>
   <p>Los datos viven en un volumen Docker (<code>/data/app.db</code> y <code>/data/uploads</code>). El frontend Material se sirve desde <code>public/</code>. Las rutas HTML aplican la misma política que el API: sin sesión se redirige a <code>/login</code>; un <code>user</code> que pide <code>/admin/users</code> vuelve al feed.</p>
 
   <h1>5. Credenciales de entrega</h1>
@@ -114,28 +114,29 @@
   <p>El rol <code>user</code> entra al feed. El rol <code>admin</code> entra a <code>/admin/users</code>. Las contraseñas se almacenan con bcrypt; el API nunca devuelve <code>password_hash</code>.</p>
 
   <h1>6. Enlaces de repositorio y servidor</h1>
-  <p>El código fuente de esta entrega está en la carpeta <code>proyecto-parcial-2/</code> del workspace de DevOps. El workflow de GitHub Actions ya está en <code>.github/workflows/ci-cd.yml</code>. El alta del remoto público y de la instancia EC2 se documenta en <code>deploy/ec2-setup.md</code> (Docker, security group 22/80/5080 y secretos <code>EC2_HOST</code>, <code>EC2_USER</code>, <code>EC2_SSH_KEY</code>, <code>OO_URL</code>, <code>OO_USER</code>, <code>OO_PASSWORD</code>).</p>
-  <p>Cuando existan, los enlaces de revisión en clase son:</p>
   <ul>
-    <li>Repositorio GitHub: el remoto que se asocie a <code>proyecto-parcial-2/</code>.</li>
-    <li>Aplicación: <code>http://&lt;EC2_PUBLIC_IP&gt;/login</code></li>
-    <li>OpenObserve: <code>http://&lt;EC2_PUBLIC_IP&gt;:5080</code></li>
+    <li>Repositorio GitHub: <a href="https://github.com/Pablo-2022371197/proyecto-parcial-2">https://github.com/Pablo-2022371197/proyecto-parcial-2</a></li>
+    <li>Aplicación: <a href="http://3.144.214.32/login">http://3.144.214.32/login</a></li>
+    <li>OpenObserve: <a href="http://3.144.214.32:5080">http://3.144.214.32:5080</a></li>
+    <li>Pipeline CI/CD: <a href="https://github.com/Pablo-2022371197/proyecto-parcial-2/actions">https://github.com/Pablo-2022371197/proyecto-parcial-2/actions</a></li>
   </ul>
+  <p>Instancia EC2 Ubuntu en <code>us-east-2</code>, IP pública <code>3.144.214.32</code>. Puertos del security group: 22 (SSH), 80 (app) y 5080 (OpenObserve). Secretos del repositorio: <code>EC2_HOST</code>, <code>EC2_USER</code>, <code>EC2_SSH_KEY</code>, <code>OO_URL</code>, <code>OO_USER</code>, <code>OO_PASSWORD</code>.</p>
 
   <h1>7. Pruebas automatizadas</h1>
-  <p>La suite se ejecuta con <code>npx playwright test</code>. Un servidor efímero (<code>tests/start-e2e.js</code>) borra <code>data/e2e.db</code>, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI.</p>
-  <p>En esta máquina el resultado fue <strong>18 passed</strong> (login UI, feed, CRUD, API 401/403, health/host y capturas). El reporte HTML del framework queda en <code>playwright-report/</code>.</p>
-  <p>El criterio de aceptación del commit con error intencional se demuestra así: alterar un texto visible o el <code>status</code> esperado de <code>/api/health</code>, hacer push a <code>main</code>, observar Playwright en rojo, el evento <code>ci_test/failure</code> en OpenObserve y la ausencia del job SSH. Al revertir, el deploy actualiza contenedores y se registra <code>event=deploy</code>.</p>
+  <p>La suite se ejecuta con <code>npx playwright test</code>. Un servidor efímero (<code>tests/start-e2e.js</code>) borra <code>data/e2e.db</code>, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI. Hay <strong>200 pruebas</strong> en ocho archivos: login UI, feed, CRUD de usuarios, contratos de API, catálogos masivos y 15 defectos documentados con <code>test.fail()</code> para no tumbar el deploy.</p>
+  <p>En GitHub Actions el job Playwright del run 3 terminó en verde (6 min 47 s). El job <code>notify</code> envió el resultado al stream <code>cicd</code> de OpenObserve. El job SSH no corre si Playwright falla: el run 2 (títulos duplicados / suite incompleta) lo demuestra, porque el despliegue ni siquiera se programó.</p>
+  <p>El criterio de aceptación del commit con error intencional se cubre con ese mismo diseño: alterar un texto visible o el <code>status</code> de <code>/api/health</code>, hacer push a <code>main</code>, observar Playwright en rojo, el evento <code>ci_test/failure</code> en OpenObserve y la ausencia del job SSH. Un commit válido deja Playwright en verde y, con la clave SSH correcta, actualiza los contenedores y registra <code>event=deploy</code>.</p>
 
   <h1>8. Observabilidad</h1>
-  <p>Cada petición HTTP escribe un log JSON con <code>timestamp</code>, <code>level</code>, <code>msg</code>, <code>route</code>, <code>statusCode</code>, <code>durationMs</code> y <code>traceId</code>. Las métricas <code>http.server.duration</code> y <code>http.server.requests</code> etiquetan método, ruta y código. Los accesos SQLite abren un span <code>sqlite.query*</code> con <code>db.statement</code>.</p>
-  <p><code>/api/host</code> expone CPU, RAM, bytes de red y temperatura. En Windows y en muchas instancias EC2 virtualizadas <code>thermalAvailable</code> vale 0 porque no existe <code>/sys/class/thermal</code>; no se inventa un sensor. En Linux bare-metal o si el kernel publica <code>thermal_zone*</code>, la métrica <code>host.thermal.celsius</code> toma ese valor. El ancho de banda sale de <code>/proc/net/dev</code> y de <code>node-exporter</code> (<code>node_network_*_bytes_total</code>).</p>
+  <p>Cada petición HTTP escribe un log JSON con <code>timestamp</code>, <code>level</code>, <code>msg</code>, <code>route</code>, <code>statusCode</code>, <code>durationMs</code> y <code>traceId</code>. Las métricas <code>http.server.duration</code> y <code>http.server.requests</code> etiquetan método, ruta y código. Los accesos SQLite abren un span <code>sqlite.query*</code> con <code>db.statement</code>. En OpenObserve hay cientos de trazas del servicio <code>uteqgram</code> y el stream <code>cicd</code> con <code>success</code> y <code>failure</code>.</p>
+  <p>El tablero UTEQGram — Infraestructura y CI/CD grafica CPU, RAM, bytes RX/TX y temperatura. <code>/api/host</code> expone los mismos valores. En EC2 virtualizada el sensor <code>/sys/class/thermal</code> no publica grados reales (<code>thermalAvailable=0</code>); <code>node-exporter</code> sí exporta <code>node_hwmon_temp_celsius</code> (en esta instancia el NVMe reporta −273,15 °C, es decir, sin lectura física). No se inventa un valor de temperatura.</p>
+  <p>Las alertas operativas <code>ram_alta_ec2</code>, <code>errores_http_app</code> y <code>pipeline_ci_fallido</code> viven en Reliability. Esta última quedó en estado Firing porque el stream <code>cicd</code> contiene al menos un <code>status=failure</code>.</p>
 
   <h1>9. Evidencias</h1>
-  <p class="noindent">Las capturas se tomaron con Playwright contra <code>http://127.0.0.1:3000</code>.</p>
+  <p class="noindent">Las capturas de la aplicación se tomaron contra <a href="http://3.144.214.32">http://3.144.214.32</a>. Las de observabilidad contra <a href="http://3.144.214.32:5080">http://3.144.214.32:5080</a>. Las de CI contra el run público de GitHub Actions.</p>
   <figure>
-    <img src="evidencias/01_login.png" alt="Página de inicio de sesión de UTEQGram" />
-    <figcaption>Figura 1. Página de inicio de sesión de UTEQGram.</figcaption>
+    <img src="evidencias/01_login.png" alt="Página de inicio de sesión de UTEQGram en EC2" />
+    <figcaption>Figura 1. Página de inicio de sesión de UTEQGram en EC2.</figcaption>
   </figure>
   <figure>
     <img src="evidencias/02_feed_user.png" alt="Feed de posts con la sesión del rol user" />
@@ -151,16 +152,44 @@
   </figure>
   <figure>
     <img src="evidencias/05_health_host.png" alt="JSON de health y host" />
-    <figcaption>Figura 5. Respuesta de /api/health y /api/host (CPU, RAM, bandera térmica).</figcaption>
+    <figcaption>Figura 5. Respuesta de /api/health y /api/host (CPU, RAM, red y bandera térmica).</figcaption>
   </figure>
   <figure>
-    <img src="evidencias/06_playwright_report.png" alt="Reporte HTML de Playwright" />
-    <figcaption>Figura 6. Reporte HTML de Playwright: 18 pruebas en verde.</figcaption>
+    <img src="evidencias/06_playwright_report.png" alt="Job Playwright en GitHub Actions" />
+    <figcaption>Figura 6. GitHub Actions: job Playwright en verde (suite de 200 pruebas).</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/13_github_actions.png" alt="Pipeline CI/CD con deploy bloqueado" />
+    <figcaption>Figura 7. Pipeline condicionado: Playwright y OpenObserve en verde; el SSH a EC2 no avanza si falla la autenticación de la clave.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/08_openobserve_dashboards.png" alt="Listado de tableros en OpenObserve" />
+    <figcaption>Figura 8. Listado de tableros en OpenObserve: UTEQGram — Infraestructura y CI/CD.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/09_openobserve_dashboard_cpu.png" alt="Dashboard CPU RAM red temperatura" />
+    <figcaption>Figura 9. Gráficas simultáneas de CPU, RAM, ancho de banda (RX/TX) y temperatura del host EC2.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/10_openobserve_cicd.png" alt="Stream cicd en OpenObserve" />
+    <figcaption>Figura 10. Stream cicd: registros de ejecución del pipeline (éxito en verde, fallo en rojo).</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/11_openobserve_traces.png" alt="Trazas HTTP y SQLite" />
+    <figcaption>Figura 11. Trazas HTTP de UTEQGram, incluyendo spans sqlite.queryGet.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/12_openobserve_alerts.png" alt="Alertas operativas en OpenObserve" />
+    <figcaption>Figura 12. Alertas operativas: pipeline_ci_fallido en Firing; RAM y errores HTTP en Normal.</figcaption>
+  </figure>
+  <figure>
+    <img src="evidencias/07_openobserve_home.png" alt="Home de OpenObserve con alerta del pipeline" />
+    <figcaption>Figura 13. Inicio de OpenObserve con el evento de alerta del pipeline CI.</figcaption>
   </figure>
 
   <h1>10. Conclusiones</h1>
-  <p>UTEQGram dejó de ser una PWA acoplada a Supabase y pasó a un backend propio con SQLite, roles reales (no solo botones ocultos) y un pipeline que bloquea el SSH a EC2 si Playwright falla. OpenTelemetry y OpenObserve cubren los tres pilares de observabilidad más el registro del CI. La temperatura del hypervisor de EC2 es una limitación conocida y queda instrumentada como disponibilidad, no como un valor ficticio.</p>
-  <p>La operación restante del alumno es crear el repositorio GitHub, la instancia EC2 y cargar los secretos listados en <code>deploy/ec2-setup.md</code>, para completar los enlaces públicos de la rúbrica.</p>
+  <p>UTEQGram dejó de ser una PWA acoplada a Supabase y pasó a un backend propio con SQLite, roles reales y un pipeline que bloquea el SSH a EC2 si Playwright falla. OpenTelemetry y OpenObserve cubren logs, métricas, trazas, el registro del CI, un tablero de infraestructura y alertas operativas. La temperatura del hypervisor de EC2 es una limitación conocida: se grafica la métrica real (incluso cuando el sensor no entrega grados útiles) y no se fabrica un valor.</p>
+  <p>La aplicación y OpenObserve ya responden en <code>3.144.214.32</code>. El job de pruebas y el de notificación a OpenObserve están en verde. El auto-deploy SSH queda condicionado a Playwright y a una clave <code>EC2_SSH_KEY</code> válida (contenido completo del <code>.pem</code>).</p>
 
   <h1>11. Referencias</h1>
   <ol class="refs">
