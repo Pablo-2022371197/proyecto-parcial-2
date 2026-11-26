@@ -85,7 +85,7 @@
       <tr><th>Id</th><th>Implementación</th></tr>
     </thead>
     <tbody>
-      <tr><td>RF-01</td><td>Playwright (Chromium): 200 pruebas de UI y API (login, feed, CRUD, 401/403, <code>/api/health</code>). En CI: job Playwright en verde.</td></tr>
+      <tr><td>RF-01</td><td>Playwright (Chromium): 200 pruebas de UI y API. Reporte HTML: 200 passed. En CI run 4 el job Playwright está en verde.</td></tr>
       <tr><td>RF-02</td><td>Workflow <code>.github/workflows/ci-cd.yml</code>: el job <code>deploy</code> usa <code>needs: test</code> y <code>if: success()</code>, así que no hay SSH a EC2 si Playwright falla.</td></tr>
       <tr><td>RF-03</td><td>Job <code>notify</code> (<code>if: always()</code>) envía a OpenObserve <code>status</code>, <code>sha</code>, <code>ref</code>, <code>actor</code> y <code>run_id</code> en el stream <code>cicd</code>; el deploy registra <code>event=deploy</code>.</td></tr>
       <tr><td>RF-04</td><td>SDK OpenTelemetry Node: logs JSON, histograma de latencia, contadores por <code>statusCode</code> y spans SQLite (<code>sqlite.queryGet</code>).</td></tr>
@@ -123,9 +123,9 @@
   <p>Instancia EC2 Ubuntu en <code>us-east-2</code>, IP pública <code>3.144.214.32</code>. Puertos del security group: 22 (SSH), 80 (app) y 5080 (OpenObserve). Secretos del repositorio: <code>EC2_HOST</code>, <code>EC2_USER</code>, <code>EC2_SSH_KEY</code>, <code>OO_URL</code>, <code>OO_USER</code>, <code>OO_PASSWORD</code>.</p>
 
   <h1>7. Pruebas automatizadas</h1>
-  <p>La suite se ejecuta con <code>npx playwright test</code>. Un servidor efímero (<code>tests/start-e2e.js</code>) borra <code>data/e2e.db</code>, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI. Hay <strong>200 pruebas</strong> en ocho archivos: login UI, feed, CRUD de usuarios, contratos de API, catálogos masivos y 15 defectos documentados con <code>test.fail()</code> para no tumbar el deploy.</p>
-  <p>En GitHub Actions el job Playwright del run 3 terminó en verde (6 min 47 s). El job <code>notify</code> envió el resultado al stream <code>cicd</code> de OpenObserve. El job SSH no corre si Playwright falla: el run 2 (títulos duplicados / suite incompleta) lo demuestra, porque el despliegue ni siquiera se programó.</p>
-  <p>El criterio de aceptación del commit con error intencional se cubre con ese mismo diseño: alterar un texto visible o el <code>status</code> de <code>/api/health</code>, hacer push a <code>main</code>, observar Playwright en rojo, el evento <code>ci_test/failure</code> en OpenObserve y la ausencia del job SSH. Un commit válido deja Playwright en verde y, con la clave SSH correcta, actualiza los contenedores y registra <code>event=deploy</code>.</p>
+  <p>La suite se ejecuta con <code>npx playwright test</code>. Un servidor efímero (<code>tests/start-e2e.js</code>) borra <code>data/e2e.db</code>, siembra admin/user y tres posts, y desactiva OpenTelemetry para no depender de OpenObserve en CI. Hay <strong>200 pruebas</strong> en ocho archivos: login UI, feed, CRUD de usuarios, contratos de API y catálogos masivos. Quince de ellas documentan defectos reales con <code>test.fail()</code>; al fallar como se espera, Playwright las cuenta como aprobadas. El reporte HTML queda en <code>informe/reporte-playwright/index.html</code>: <strong>200 passed, 0 failed</strong> (92,5 % de aserciones funcionales más 7,5 % de fallos esperados).</p>
+  <p>En GitHub Actions el run 4 (<code>7fd8ccc</code>) terminó en <strong>Success</strong>: Playwright 5 min 54 s, notificación a OpenObserve y despliegue SSH a EC2. El job SSH no corre si Playwright falla: el run 2 lo demuestra, porque el despliegue ni siquiera se programó.</p>
+  <p>El criterio de aceptación del commit con error intencional se cubre con ese mismo diseño: alterar un texto visible o el <code>status</code> de <code>/api/health</code>, hacer push a <code>main</code>, observar Playwright en rojo, el evento <code>ci_test/failure</code> en OpenObserve y la ausencia del job SSH. Un commit válido deja Playwright en verde, actualiza los contenedores y registra <code>event=deploy</code>.</p>
 
   <h1>8. Observabilidad</h1>
   <p>Cada petición HTTP escribe un log JSON con <code>timestamp</code>, <code>level</code>, <code>msg</code>, <code>route</code>, <code>statusCode</code>, <code>durationMs</code> y <code>traceId</code>. Las métricas <code>http.server.duration</code> y <code>http.server.requests</code> etiquetan método, ruta y código. Los accesos SQLite abren un span <code>sqlite.query*</code> con <code>db.statement</code>. En OpenObserve hay cientos de trazas del servicio <code>uteqgram</code> y el stream <code>cicd</code> con <code>success</code> y <code>failure</code>.</p>
@@ -155,12 +155,12 @@
     <figcaption>Figura 5. Respuesta de /api/health y /api/host (CPU, RAM, red y bandera térmica).</figcaption>
   </figure>
   <figure>
-    <img src="evidencias/06_playwright_report.png" alt="Job Playwright en GitHub Actions" />
-    <figcaption>Figura 6. GitHub Actions: job Playwright en verde (suite de 200 pruebas).</figcaption>
+    <img src="evidencias/06_playwright_report.png" alt="Reporte HTML de Playwright con 200 pruebas en verde" />
+    <figcaption>Figura 6. Reporte HTML de Playwright: 200 pruebas, 200 passed, 0 failed.</figcaption>
   </figure>
   <figure>
-    <img src="evidencias/13_github_actions.png" alt="Pipeline CI/CD con deploy bloqueado" />
-    <figcaption>Figura 7. Pipeline condicionado: Playwright y OpenObserve en verde; el SSH a EC2 no avanza si falla la autenticación de la clave.</figcaption>
+    <img src="evidencias/13_github_actions.png" alt="GitHub Actions run 4 en Success" />
+    <figcaption>Figura 7. GitHub Actions run 4 en Success: Playwright, registro en OpenObserve y despliegue SSH a EC2.</figcaption>
   </figure>
   <figure>
     <img src="evidencias/08_openobserve_dashboards.png" alt="Listado de tableros en OpenObserve" />
@@ -189,7 +189,7 @@
 
   <h1>10. Conclusiones</h1>
   <p>UTEQGram dejó de ser una PWA acoplada a Supabase y pasó a un backend propio con SQLite, roles reales y un pipeline que bloquea el SSH a EC2 si Playwright falla. OpenTelemetry y OpenObserve cubren logs, métricas, trazas, el registro del CI, un tablero de infraestructura y alertas operativas. La temperatura del hypervisor de EC2 es una limitación conocida: se grafica la métrica real (incluso cuando el sensor no entrega grados útiles) y no se fabrica un valor.</p>
-  <p>La aplicación y OpenObserve ya responden en <code>3.144.214.32</code>. El job de pruebas y el de notificación a OpenObserve están en verde. El auto-deploy SSH queda condicionado a Playwright y a una clave <code>EC2_SSH_KEY</code> válida (contenido completo del <code>.pem</code>).</p>
+  <p>La aplicación y OpenObserve responden en <code>3.144.214.32</code>. El run 4 de GitHub Actions dejó en verde Playwright, la notificación a OpenObserve y el auto-deploy SSH que actualiza los contenedores en EC2.</p>
 
   <h1>11. Referencias</h1>
   <ol class="refs">

@@ -3,7 +3,7 @@ import { mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { ADMIN, USER, loginUi } from './helpers.js';
 
-const dir = resolve('informe/evidencias');
+const dir = resolve('test-results/evidencias');
 mkdirSync(dir, { recursive: true });
 
 test.describe('Evidencias del informe', () => {
