@@ -76,6 +76,32 @@ export const userForbidden = [
 
 export const jsonEndpoints = ['/api/health', '/api/host'];
 
+export const staticAssets = [
+  '/src/css/app.css',
+  '/src/css/feed.css',
+  '/src/css/help.css',
+  '/src/css/material.indigo-pink.min.css',
+  '/src/js/material.min.js',
+  '/src/js/api.js',
+  '/src/js/login.js',
+  '/src/js/feed.js',
+  '/src/js/nav.js',
+  '/src/js/admin.js',
+  '/src/images/main-image.png',
+  '/src/images/main-image-sm.png',
+  '/src/images/main-image-lg.png',
+  '/src/images/icons/app-icon-192x192.png',
+  '/src/images/icons/app-icon-512x512.png'
+];
+
+export const validUsernames = [
+  'alumno01',
+  'user.name',
+  'test-user',
+  'idgs14',
+  'uteq_admin'
+];
+
 export const postSamples = [
   { title: 'Laboratorio DevOps', location: 'UTEQ' },
   { title: 'Pipeline verde', location: 'Ohio' },
@@ -207,6 +233,28 @@ export const loginControls = [
     focusable: false,
     attr: { name: 'role', value: 'alert' },
     accessible: { type: 'attr', name: 'id', value: 'login-error' },
+    interact: { type: 'none' }
+  },
+  {
+    id: 'header-title',
+    selector: '.mdl-layout__header .mdl-layout-title',
+    tag: 'SPAN',
+    visible: true,
+    enabled: true,
+    focusable: false,
+    attr: { name: 'class', value: /mdl-layout-title/ },
+    accessible: { type: 'text', value: /UTEQGram/ },
+    interact: { type: 'none' }
+  },
+  {
+    id: 'card-title',
+    selector: '.mdl-card__title-text',
+    tag: 'H2',
+    visible: true,
+    enabled: true,
+    focusable: false,
+    attr: { name: 'class', value: /mdl-card__title-text/ },
+    accessible: { type: 'text', value: /Iniciar sesión/ },
     interact: { type: 'none' }
   }
 ];
@@ -393,6 +441,50 @@ export const feedControls = [
     attr: { name: 'aria-live', value: 'assertive' },
     accessible: { type: 'attr', name: 'aria-atomic', value: 'true' },
     interact: { type: 'none' }
+  },
+  {
+    id: 'main-image',
+    selector: '.main-image',
+    tag: 'IMG',
+    visible: true,
+    enabled: true,
+    focusable: false,
+    attr: { name: 'alt', value: 'Campus UTEQ' },
+    accessible: { type: 'attr', name: 'src', value: /main-image/ },
+    interact: { type: 'none' }
+  },
+  {
+    id: 'shared-moments',
+    selector: '#shared-moments',
+    tag: 'DIV',
+    visible: true,
+    enabled: true,
+    focusable: false,
+    attr: { name: 'id', value: 'shared-moments' },
+    accessible: { type: 'attr', name: 'id', value: 'shared-moments' },
+    interact: { type: 'none' }
+  },
+  {
+    id: 'feed-heading',
+    selector: 'h5.text-center',
+    tag: 'H5',
+    visible: true,
+    enabled: true,
+    focusable: false,
+    attr: { name: 'class', value: /text-center/ },
+    accessible: { type: 'text', value: /Comparte tus Momentos/ },
+    interact: { type: 'none' }
+  },
+  {
+    id: 'drawer-title',
+    selector: '.mdl-layout__drawer > .mdl-layout-title',
+    tag: 'SPAN',
+    visible: 'attached',
+    enabled: true,
+    focusable: false,
+    attr: { name: 'class', value: /mdl-layout-title/ },
+    accessible: { type: 'text', value: /UTEQGram/ },
+    interact: { type: 'none' }
   }
 ];
 
@@ -560,6 +652,50 @@ export const adminControls = [
     focusable: false,
     attr: { name: 'id', value: 'users-table' },
     accessible: { type: 'attr', name: 'class', value: /users-table/ },
+    interact: { type: 'none' }
+  },
+  {
+    id: 'admin-error',
+    selector: '#admin-error',
+    tag: 'P',
+    visible: true,
+    enabled: true,
+    focusable: false,
+    attr: { name: 'role', value: 'alert' },
+    accessible: { type: 'attr', name: 'id', value: 'admin-error' },
+    interact: { type: 'none' }
+  },
+  {
+    id: 'user-id',
+    selector: '#user-id',
+    tag: 'INPUT',
+    visible: false,
+    enabled: true,
+    focusable: false,
+    attr: { name: 'type', value: 'hidden' },
+    accessible: { type: 'attr', name: 'id', value: 'user-id' },
+    interact: { type: 'none' }
+  },
+  {
+    id: 'label-user-role',
+    selector: 'label[for="user-role"]',
+    tag: 'LABEL',
+    visible: true,
+    enabled: true,
+    focusable: false,
+    attr: { name: 'for', value: 'user-role' },
+    accessible: { type: 'text', value: /Rol/ },
+    interact: { type: 'click-label', focuses: '#user-role' }
+  },
+  {
+    id: 'drawer-users',
+    selector: '.mdl-layout__drawer a.mdl-navigation__link[href="/admin/users"]',
+    tag: 'A',
+    visible: 'attached',
+    enabled: true,
+    focusable: false,
+    attr: { name: 'href', value: '/admin/users' },
+    accessible: { type: 'text', value: /Usuarios/ },
     interact: { type: 'none' }
   }
 ];
