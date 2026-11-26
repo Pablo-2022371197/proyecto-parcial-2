@@ -13,10 +13,10 @@ test.describe('Feed', () => {
     await loginUi(page, USER);
     await page.locator('#share-image-button').click();
     await page.locator('#title').fill('Post de prueba');
-    await page.locator('#location').fill('Laboratorio');
+    await page.locator('#location').fill('Sala de cómputo');
     await page.locator('#post-btn').click();
     await expect(page.getByText('Post de prueba')).toBeVisible();
-    await expect(page.getByText(/Laboratorio/)).toBeVisible();
+    await expect(page.getByText(/Sala de cómputo/)).toBeVisible();
   });
 
   test('el usuario no puede abrir el CRUD de usuarios', async ({ page }) => {
