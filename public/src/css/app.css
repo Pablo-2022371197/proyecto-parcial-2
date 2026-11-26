@@ -35,16 +35,16 @@
     width: auto;
 }
 
-/* MDL marca required vacío como :invalid al cargar. El rojo solo tras escribir o enfocar. */
-.login-wrap .mdl-textfield:not(.is-dirty):not(.is-focused).is-invalid .mdl-textfield__label {
+/* MDL marca required vacío como :invalid al cargar (login y CRUD). El rojo solo tras escribir o enfocar. */
+.mdl-textfield:not(.is-dirty):not(.is-focused).is-invalid .mdl-textfield__label {
     color: rgba(0, 0, 0, 0.26);
 }
 
-.login-wrap .mdl-textfield:not(.is-dirty).is-invalid .mdl-textfield__input {
+.mdl-textfield:not(.is-dirty).is-invalid .mdl-textfield__input {
     border-color: rgba(0, 0, 0, 0.12);
 }
 
-.login-wrap .mdl-textfield:not(.is-dirty).is-invalid .mdl-textfield__label:after {
+.mdl-textfield:not(.is-dirty).is-invalid .mdl-textfield__label:after {
     background-color: #3f51b5;
     transform: scaleX(0);
 }
